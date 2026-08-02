@@ -135,6 +135,25 @@
   .pain-card h3 svg{width:20px;height:20px;color:#F87171;flex:none}
   .pain-card p{color:var(--muted);font-size:.94rem}
 
+  /* before / after */
+  .ba{background:var(--bg)}
+  .ba .wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+  .ba-col{padding:34px 32px;border:1px solid var(--line);border-radius:var(--radius)}
+  .ba-col .lbl{font-family:var(--body);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+  .ba-col.before{background:var(--panel)}
+  .ba-col.before .lbl{color:#F4A28C}
+  .ba-col.after{background:linear-gradient(150deg,var(--panel-2),var(--panel))}
+  .ba-col.after .lbl{color:var(--sky)}
+  .ba-col .big{font-family:var(--display);font-size:clamp(2rem,4vw,2.9rem);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:8px}
+  .ba-col.before .big{color:var(--muted)}
+  .ba-col .desc{color:var(--muted);font-size:.95rem}
+  .ba-arrow{display:grid;place-items:center;color:var(--sky);padding:0 6px}
+  .ba-arrow svg{width:34px;height:34px}
+  @media(max-width:720px){
+    .ba .wrap{grid-template-columns:1fr}
+    .ba-arrow{transform:rotate(90deg);padding:6px 0}
+  }
+
   /* benefits */
   .benefits{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
   .bcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px 24px;transition:transform .35s var(--ease),border-color .35s var(--ease),box-shadow .35s var(--ease)}
@@ -392,6 +411,25 @@
         <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Atado a la computadora</h3>
         <p>Los sistemas caros y complicados te sientan frente a la PC. Tu negocio se mueve desde el celular.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE / AFTER -->
+<section class="block ba">
+  <div class="wrap">
+    <div class="ba-col before reveal">
+      <div class="lbl">Antes · a mano</div>
+      <div class="big">Una tarde entera</div>
+      <div class="desc">Abrir cada factura, copiar proveedor, RUC y montos al Excel, cuadrar el IGV y revisar que no falte ninguna.</div>
+    </div>
+    <div class="ba-arrow reveal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <div class="ba-col after reveal">
+      <div class="lbl">Con HUSAC · con IA</div>
+      <div class="big">Unos minutos</div>
+      <div class="desc">Mandas la foto por WhatsApp y el bot la lee y la ordena en el Excel, con la base, el IGV y el total ya separados.</div>
     </div>
   </div>
 </section>
