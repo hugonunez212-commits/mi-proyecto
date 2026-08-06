@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUSAC — Automatización con IA · Bot de Facturas por WhatsApp</title>
+<meta name="description" content="HUSAC automatiza las tareas repetitivas de tu negocio con IA integrada. Manda la foto o PDF de tus facturas por WhatsApp y salen solas en un Excel: base, IGV y total separados. Instalación incluida y 7 días de prueba.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#071022;
+    --bg-soft:#0B1830;
+    --panel:#0F2242;
+    --panel-2:#143059;
+    --ink:#EAF2FF;
+    --muted:#93A6C9;
+    --line:rgba(255,255,255,.09);
+    --brand:#2563EB;
+    --brand-2:#3B82F6;
+    --sky:#38BDF8;
+    --cyan:#38BDF8;
+    --wa:#25D366;
+    --wa-deep:#1EBE5A;
+    --amber:#F5B454;
+    --ok:#34D399;
+    --radius:20px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --display:'Sora',system-ui,sans-serif;
+    --body:'Inter',-apple-system,system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+  img{max-width:100%;display:block}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;font-family:var(--body);font-weight:600;font-size:1rem;padding:15px 30px;border-radius:999px;border:none;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s var(--ease);white-space:nowrap}
+  .btn-wa{background:var(--wa);color:#062b14;box-shadow:0 10px 26px rgba(37,211,102,.28)}
+  .btn-wa:hover{background:var(--wa-deep);transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,211,102,.38)}
+  .btn-brand{background:linear-gradient(120deg,var(--brand),var(--sky));color:#fff;box-shadow:0 10px 26px rgba(37,99,235,.4)}
+  .btn-brand:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,99,235,.5)}
+  .btn-ghost{background:rgba(255,255,255,.04);color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{background:rgba(255,255,255,.08);transform:translateY(-2px)}
+
+  /* announcement */
+  .anno{background:linear-gradient(90deg,var(--brand),var(--sky));color:#04122e;text-align:center;font-size:.83rem;letter-spacing:.01em;padding:9px 16px;font-weight:600}
+
+  /* header */
+  header{position:sticky;top:0;z-index:60;background:rgba(7,16,34,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .logo{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.01em;display:flex;align-items:center;gap:.5em}
+  .logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--sky));display:grid;place-items:center;color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.45)}
+  .logo .mark svg{width:20px;height:20px}
+  .logo b{color:var(--sky)}
+  .logo .sub{font-family:var(--body);font-weight:500;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-left:-.35em;align-self:flex-end;padding-bottom:5px}
+  .nav-links{display:flex;gap:28px;font-size:.94rem;font-weight:500}
+  .nav-links a{color:var(--muted);transition:color .2s;position:relative;padding:4px 0}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--sky);transition:width .3s var(--ease)}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{display:flex;align-items:center;gap:14px}
+  .btn-sm{padding:10px 20px;font-size:.9rem}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
+  .burger span{width:24px;height:2px;background:var(--ink);border-radius:2px}
+
+  /* hero */
+  .hero{position:relative;padding:72px 0 84px;overflow:hidden}
+  .glow{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+  .glow.g1{width:520px;height:520px;background:rgba(37,99,235,.24);top:-160px;right:-120px}
+  .glow.g2{width:420px;height:420px;background:rgba(56,189,248,.14);bottom:-180px;left:-140px}
+  .hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.08fr .92fr;gap:48px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;letter-spacing:.02em;color:var(--sky);background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.28);padding:7px 15px;border-radius:999px;margin-bottom:22px}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--sky);box-shadow:0 0 10px var(--sky);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .hero h1{font-size:clamp(2.4rem,5.4vw,3.9rem);margin-bottom:22px}
+  .hero h1 em{font-style:normal;background:linear-gradient(120deg,var(--brand-2),var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lede{font-size:1.14rem;color:var(--muted);max-width:46ch;margin-bottom:30px}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+  .hero-note{margin-top:22px;font-size:.86rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .hero-note svg{width:18px;height:18px;color:var(--ok);flex:none}
+
+  /* phone mockup */
+  .stage{position:relative}
+  .phone{width:290px;margin:0 auto;background:#0d1530;border:9px solid #050b1c;border-radius:38px;box-shadow:0 34px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05);overflow:hidden}
+  .phone-top{background:#075E54;padding:14px 16px 12px;display:flex;align-items:center;gap:11px}
+  .phone-top .ava{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--sky));display:grid;place-items:center;color:#fff;font-weight:700;font-family:var(--display);flex:none;font-size:.82rem}
+  .phone-top .who b{font-size:.9rem;display:block;color:#fff;font-family:var(--body)}
+  .phone-top .who span{font-size:.72rem;color:#cdeee6}
+  .chat{background:#0b1424;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:18px 18px;padding:16px 13px;display:flex;flex-direction:column;gap:10px;min-height:440px}
+  .bub{max-width:82%;padding:9px 12px;border-radius:14px;font-size:.82rem;line-height:1.45;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+  .bub.me{align-self:flex-end;background:#075E54;color:#eafff6;border-bottom-right-radius:4px}
+  .bub.bot{align-self:flex-start;background:#15264a;color:#e8eeff;border-bottom-left-radius:4px}
+  .bub.img{padding:0;overflow:hidden;background:#122;max-width:66%}
+  .bub.img .doc{background:linear-gradient(135deg,#1c3a66,#152a4d);padding:16px 14px;display:flex;flex-direction:column;gap:8px;align-items:center;color:var(--sky)}
+  .bub.img .doc svg{width:34px;height:34px;opacity:.9}
+  .bub.img .doc span{font-size:.72rem;color:var(--muted)}
+  .bub .k{color:var(--sky);font-weight:600}
+  .bub .amt{color:var(--ok);font-weight:600}
+  .bub .t{display:block;text-align:right;font-size:.62rem;color:rgba(255,255,255,.45);margin-top:3px}
+  .float-tag{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:9px;box-shadow:0 14px 30px rgba(0,0,0,.4)}
+  .float-tag .fi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .float-tag.t1{top:22px;left:-28px}
+  .float-tag.t1 .fi{background:rgba(52,211,153,.15);color:var(--ok)}
+  .float-tag.t2{bottom:40px;right:-30px}
+  .float-tag.t2 .fi{background:rgba(245,180,84,.15);color:var(--amber)}
+
+  /* seals */
+  .seals{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-soft)}
+  .seals .wrap{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;padding:20px 24px}
+  .seal{display:flex;align-items:center;gap:10px;font-size:.9rem;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);padding:11px 20px;border-radius:999px}
+  .seal svg{width:20px;height:20px;color:var(--sky);flex:none}
+
+  /* section base */
+  section.block{padding:92px 0;position:relative}
+  .sec-head{max-width:660px;margin:0 auto 58px;text-align:center}
+  .eyebrow{display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--sky);margin-bottom:16px}
+  .sec-head h2{font-size:clamp(2rem,4.2vw,2.9rem);margin-bottom:16px}
+  .sec-head p{color:var(--muted);font-size:1.06rem}
+
+  /* problem strip */
+  .pain{background:var(--bg-soft)}
+  .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .pain-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;border-left:3px solid rgba(245,84,84,.55)}
+  .pain-card h3{font-size:1.08rem;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+  .pain-card h3 svg{width:20px;height:20px;color:#F87171;flex:none}
+  .pain-card p{color:var(--muted);font-size:.94rem}
+
+  /* before / after */
+  .ba{background:var(--bg)}
+  .ba .wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+  .ba-col{padding:34px 32px;border:1px solid var(--line);border-radius:var(--radius)}
+  .ba-col .lbl{font-family:var(--body);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+  .ba-col.before{background:var(--panel)}
+  .ba-col.before .lbl{color:#F4A28C}
+  .ba-col.after{background:linear-gradient(150deg,var(--panel-2),var(--panel))}
+  .ba-col.after .lbl{color:var(--sky)}
+  .ba-col .big{font-family:var(--display);font-size:clamp(2rem,4vw,2.9rem);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:8px}
+  .ba-col.before .big{color:var(--muted)}
+  .ba-col .desc{color:var(--muted);font-size:.95rem}
+  .ba-arrow{display:grid;place-items:center;color:var(--sky);padding:0 6px}
+  .ba-arrow svg{width:34px;height:34px}
+  @media(max-width:720px){
+    .ba .wrap{grid-template-columns:1fr}
+    .ba-arrow{transform:rotate(90deg);padding:6px 0}
+  }
+
+  /* benefits */
+  .benefits{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .bcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px 24px;transition:transform .35s var(--ease),border-color .35s var(--ease),box-shadow .35s var(--ease)}
+  .bcard:hover{transform:translateY(-6px);border-color:rgba(56,189,248,.5);box-shadow:0 22px 44px rgba(0,0,0,.35)}
+  .bcard .ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(145deg,var(--brand),var(--sky));display:grid;place-items:center;color:#fff;margin-bottom:18px;box-shadow:0 8px 20px rgba(37,99,235,.4)}
+  .bcard .ic svg{width:26px;height:26px}
+  .bcard h3{font-size:1.14rem;margin-bottom:9px}
+  .bcard p{font-size:.92rem;color:var(--muted)}
+
+  /* steps */
+  .steps{background:var(--bg-soft)}
+  .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .step{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:34px 26px 28px}
+  .step .num{font-family:var(--display);font-size:2.6rem;font-weight:800;background:linear-gradient(120deg,var(--brand-2),var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;margin-bottom:12px}
+  .step h3{font-size:1.22rem;margin-bottom:10px}
+  .step p{color:var(--muted);font-size:.95rem}
+  .step .arrow{position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:32px;height:32px;color:var(--brand-2);z-index:3}
+  .step:last-child .arrow{display:none}
+
+  /* use cases */
+  .cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .case{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;transition:transform .3s var(--ease),border-color .3s}
+  .case:hover{transform:translateY(-4px);border-color:rgba(56,189,248,.4)}
+  .case .ic{width:44px;height:44px;border-radius:12px;background:rgba(56,189,248,.12);color:var(--sky);display:grid;place-items:center;margin-bottom:16px}
+  .case .ic svg{width:22px;height:22px}
+  .case h3{font-size:1.06rem;margin-bottom:7px}
+  .case p{color:var(--muted);font-size:.9rem}
+
+  /* flagship */
+  .flag .wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  .flag-media{position:relative;background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--line);border-radius:26px;padding:34px;box-shadow:0 24px 50px rgba(0,0,0,.4)}
+  .excel{background:#0b1d3c;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.76rem}
+  .excel .er{display:grid;grid-template-columns:1.4fr .8fr .7fr .7fr .8fr;border-bottom:1px solid var(--line)}
+  .excel .er>div{padding:9px 10px;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .excel .er.head{background:#123063;font-weight:700;color:var(--sky);font-family:var(--display);font-size:.72rem}
+  .excel .er:nth-child(even){background:rgba(255,255,255,.02)}
+  .excel .er .amt{color:var(--ok)}
+  .excel-cap{margin-top:14px;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .excel-cap svg{width:16px;height:16px;color:var(--ok)}
+  .flag h2{font-size:clamp(1.9rem,3.8vw,2.6rem);margin-bottom:18px}
+  .flag .tag{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);background:rgba(245,180,84,.12);border:1px solid rgba(245,180,84,.3);padding:6px 13px;border-radius:999px;margin-bottom:18px}
+  .feat{list-style:none;display:flex;flex-direction:column;gap:15px;margin:24px 0 30px}
+  .feat li{display:flex;gap:13px;align-items:flex-start}
+  .feat .ck{flex:none;width:26px;height:26px;border-radius:8px;background:rgba(52,211,153,.14);color:var(--ok);display:grid;place-items:center;margin-top:2px}
+  .feat .ck svg{width:15px;height:15px}
+  .feat b{display:block;font-family:var(--display);font-size:1rem;font-weight:600;margin-bottom:1px}
+  .feat span{color:var(--muted);font-size:.9rem}
+
+  /* pricing */
+  .pricing{background:var(--bg-soft)}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+  .plan{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:32px 28px;display:flex;flex-direction:column;position:relative;transition:transform .3s var(--ease)}
+  .plan:hover{transform:translateY(-6px)}
+  .plan.pop{border:1.5px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(140deg,var(--brand),var(--sky)) border-box;box-shadow:0 24px 50px rgba(37,99,235,.28)}
+  .plan .ptag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(120deg,var(--brand),var(--sky));color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.05em;padding:6px 16px;border-radius:999px;white-space:nowrap;box-shadow:0 8px 20px rgba(37,99,235,.45)}
+  .plan h3{font-size:1.25rem;margin-bottom:4px}
+  .plan .sub{color:var(--muted);font-size:.86rem;margin-bottom:18px;min-height:38px}
+  .plan .amt{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+  .plan .amt .cur{font-size:1.1rem;color:var(--muted);font-weight:600}
+  .plan .amt .val{font-family:var(--display);font-size:2.9rem;font-weight:800}
+  .plan .amt .per{color:var(--muted);font-size:.9rem}
+  .plan .lim{font-size:.86rem;color:var(--sky);font-weight:600;margin-bottom:22px}
+  .plan ul{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:26px;flex:1}
+  .plan ul li{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;color:var(--ink)}
+  .plan ul li svg{width:18px;height:18px;color:var(--ok);flex:none;margin-top:3px}
+  .plan .btn{width:100%}
+  .price-foot{text-align:center;margin-top:30px;color:var(--muted);font-size:.9rem}
+
+  /* custom banner */
+  .custom{margin-top:26px;background:linear-gradient(140deg,var(--panel-2),var(--panel));border:1px solid var(--line);border-radius:22px;padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .custom .cx h3{font-size:1.35rem;margin-bottom:6px}
+  .custom .cx p{color:var(--muted);font-size:.96rem;max-width:52ch}
+
+  /* reviews */
+  .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .rcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px}
+  .rcard .stars{color:var(--amber);letter-spacing:2px;margin-bottom:14px}
+  .rcard p{font-size:.96rem;line-height:1.7;margin-bottom:20px;color:var(--ink)}
+  .rcard .who{display:flex;align-items:center;gap:12px}
+  .rcard .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,var(--brand),var(--sky));display:grid;place-items:center;color:#fff;font-weight:700;font-family:var(--display)}
+  .rcard .who b{font-size:.9rem;display:block}
+  .rcard .who span{font-size:.78rem;color:var(--muted)}
+
+  /* faq */
+  .faq-list{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .faq-item{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .faq-q{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:22px 24px;font-family:var(--display);font-size:1.06rem;font-weight:600;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:16px}
+  .faq-q .pm{flex:none;width:26px;height:26px;border-radius:50%;background:rgba(37,99,235,.18);color:var(--sky);display:grid;place-items:center;transition:transform .35s var(--ease);font-size:1.2rem}
+  .faq-item.open .pm{transform:rotate(45deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .4s var(--ease)}
+  .faq-a p{padding:0 24px 22px;color:var(--muted);font-size:.96rem}
+
+  /* final cta */
+  .final{position:relative;overflow:hidden;text-align:center;padding:100px 0}
+  .final .glow.gf{width:640px;height:640px;background:rgba(37,99,235,.18);top:-260px;left:50%;transform:translateX(-50%)}
+  .final .wrap{position:relative;z-index:2}
+  .final h2{font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:18px}
+  .final h2 em{font-style:normal;background:linear-gradient(120deg,var(--brand-2),var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .final p{max-width:52ch;margin:0 auto 34px;font-size:1.12rem;color:var(--muted)}
+  .final .hero-cta{justify-content:center}
+
+  /* footer */
+  footer{background:var(--bg-soft);border-top:1px solid var(--line);color:var(--muted);padding:60px 0 30px;font-size:.9rem}
+  .foot-top{display:grid;grid-template-columns:2fr 1fr 1.2fr;gap:40px;padding-bottom:36px;border-bottom:1px solid var(--line)}
+  .foot-brand .logo{margin-bottom:14px}
+  .foot-brand p{max-width:40ch;margin-bottom:16px}
+  .foot-brand .biz{font-size:.84rem;line-height:1.7}
+  .foot-brand .biz b{color:var(--ink)}
+  .foot-col h4{font-family:var(--display);color:var(--ink);font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px}
+  .foot-col a{display:block;margin-bottom:10px;transition:color .2s}
+  .foot-col a:hover{color:var(--sky)}
+  .foot-bot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:26px;font-size:.82rem}
+  .disc{max-width:1180px;margin:18px auto 0;padding:0 24px;font-size:.76rem;color:rgba(147,166,201,.7);line-height:1.55}
+
+  /* floating whatsapp */
+  .wa-fab{position:fixed;right:22px;bottom:22px;z-index:80;width:60px;height:60px;border-radius:50%;background:var(--wa);display:grid;place-items:center;box-shadow:0 12px 30px rgba(37,211,102,.5);transition:transform .25s var(--ease)}
+  .wa-fab:hover{transform:scale(1.08)}
+  .wa-fab svg{width:32px;height:32px;color:#fff}
+  .wa-fab::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--wa);animation:ring 2.2s infinite}
+  @keyframes ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.5);opacity:0}}
+
+  /* responsive */
+  @media(max-width:960px){
+    .nav-links{display:none}
+    .burger{display:flex}
+    .hero .wrap{grid-template-columns:1fr;gap:52px}
+    .stage{order:-1}
+    .hero p.lede{max-width:none}
+    .benefits{grid-template-columns:repeat(2,1fr)}
+    .pain-grid,.steps-grid,.cases-grid,.rgrid,.plans{grid-template-columns:1fr}
+    .step .arrow{display:none}
+    .flag .wrap{grid-template-columns:1fr;gap:38px}
+    .flag-media{order:-1}
+    .foot-top{grid-template-columns:1fr 1fr}
+    .foot-brand{grid-column:1/-1}
+  }
+  @media(max-width:520px){
+    .benefits{grid-template-columns:1fr}
+    section.block{padding:66px 0}
+    .nav-cta .btn-sm.hide-sm{display:none}
+    .custom{flex-direction:column;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<div class="anno">⚡ Instalación incluida · 7 días de prueba sin compromiso · Número dedicado de WhatsApp</div>
+
+<header>
+  <div class="wrap nav">
+    <div class="logo">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg></span>
+      HUSA<b>C</b><span class="sub">Bot IA</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#soluciones">Soluciones</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#producto">Bot de facturas</a>
+      <a href="#planes">Planes</a>
+      <a href="#faq">Preguntas</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#planes" class="btn btn-ghost btn-sm hide-sm">Ver planes</a>
+      <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20quiero%20informaci%C3%B3n%20del%20bot%20de%20facturas" class="btn btn-wa btn-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.24 8.24 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.16 0-.42.06-.64.31-.22.25-.84.83-.84 2s.86 2.31.98 2.47c.12.17 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.51.57.18 1.1.16 1.51.1.46-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>
+        WhatsApp
+      </a>
+      <div class="burger" aria-label="Menú"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="wrap">
+    <div class="hero-copy reveal">
+      <span class="pill"><span class="dot"></span> Automatización con IA para tu negocio</span>
+      <h1>Manda la foto de tu factura y sale sola <em>en un Excel</em>.</h1>
+      <p class="lede">HUSAC pone la inteligencia artificial a trabajar por ti. Le mandas la foto o el PDF de tus facturas de compra por WhatsApp y el bot las lee y las ordena en un Excel — con base imponible, IGV y total ya separados. Tu crédito fiscal del mes, armado sin copiar nada a mano.</p>
+      <div class="hero-cta">
+        <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20quiero%20probar%20el%20bot%20de%20facturas%20gratis%207%20d%C3%ADas" class="btn btn-wa">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.52 12.99c-.21.58-1.22 1.11-1.68 1.18-.41.06-.94.08-1.51-.1-.35-.11-.8-.26-1.37-.51-2.41-1.04-3.98-3.45-4.1-3.62-.12-.16-.98-1.3-.98-2.47s.62-1.75.84-2c.22-.25.48-.31.64-.31h.48c.16.01.36-.05.56.43.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.08.16-.12.26-.25.41-.12.14-.26.32-.37.43-.12.13-.25.26-.11.51.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.13.4.11.54-.06.15-.16.63-.72.79-.97.17-.25.33-.21.56-.13.22.09 1.44.69 1.69.81.25.12.41.18.47.29.07.11.07.6-.14 1.18Z"/></svg>
+          Probar gratis 7 días
+        </a>
+        <a href="#producto" class="btn btn-ghost">Ver cómo funciona</a>
+      </div>
+      <div class="hero-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+        Sin instalar apps · sin tocar tu WhatsApp personal · resultados el primer día
+      </div>
+    </div>
+
+    <div class="stage reveal">
+      <div class="phone">
+        <div class="phone-top">
+          <span class="ava">IA</span>
+          <div class="who"><b>Bot HUSAC · Facturas</b><span>en línea · responde al instante</span></div>
+        </div>
+        <div class="chat">
+          <div class="bub bot">Hola 👋 Mándame la foto o el PDF de tu factura de compra y yo la ordeno.</div>
+          <div class="bub img">
+            <div class="doc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+              <span>FACTURA_00218.jpg</span>
+            </div>
+          </div>
+          <div class="bub me">☝️ Aquí está<span class="t">10:24 ✓✓</span></div>
+          <div class="bub bot">✅ Factura leída y guardada:<br>
+            <span class="k">Proveedor:</span> Repuestos Andinos SAC<br>
+            <span class="k">RUC:</span> 20512345678<br>
+            <span class="k">Serie-N°:</span> F001-000218<br>
+            <span class="k">Base:</span> S/ 254.24 · <span class="k">IGV:</span> S/ 45.76<br>
+            <span class="k">Total:</span> <span class="amt">S/ 300.00</span>
+            <span class="t">10:24</span>
+          </div>
+          <div class="bub bot">📊 Tu crédito fiscal del mes va en <span class="amt">S/ 1,842.30</span>. Todo en tu Excel.<span class="t">10:24</span></div>
+        </div>
+      </div>
+      <div class="float-tag t1"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Sin copiar a mano</div>
+      <div class="float-tag t2"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span> Ahorra horas al mes</div>
+    </div>
+  </div>
+</section>
+
+<!-- SEALS -->
+<div class="seals">
+  <div class="wrap">
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Instalación incluida</div>
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg> 7 días de prueba</div>
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg> Número dedicado</div>
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.6M22 4 12 14.01l-3-3"/></svg> Respaldo diario en Google Drive</div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="block pain">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">El problema</span>
+      <h2>Copiar facturas a mano te roba horas</h2>
+      <p>Pasar cada factura al Excel, cuadrar el IGV y no perder crédito fiscal. Eso lo puede hacer la IA por ti.</p>
+    </div>
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Horas copiando a mano</h3>
+        <p>Pasar cada factura al Excel te quita tiempo que podrías dedicar a atender y vender.</p>
+      </div>
+      <div class="pain-card reveal">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Crédito fiscal perdido</h3>
+        <p>Una factura traspapelada o duplicada y pierdes crédito fiscal que ya habías pagado.</p>
+      </div>
+      <div class="pain-card reveal">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Atado a la computadora</h3>
+        <p>Los sistemas caros y complicados te sientan frente a la PC. Tu negocio se mueve desde el celular.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE / AFTER -->
+<section class="block ba">
+  <div class="wrap">
+    <div class="ba-col before reveal">
+      <div class="lbl">Antes · a mano</div>
+      <div class="big">Una tarde entera</div>
+      <div class="desc">Abrir cada factura, copiar proveedor, RUC y montos al Excel, cuadrar el IGV y revisar que no falte ninguna.</div>
+    </div>
+    <div class="ba-arrow reveal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <div class="ba-col after reveal">
+      <div class="lbl">Con HUSAC · con IA</div>
+      <div class="big">Unos minutos</div>
+      <div class="desc">Mandas la foto por WhatsApp y el bot la lee y la ordena en el Excel, con la base, el IGV y el total ya separados.</div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section class="block" id="soluciones">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Por qué HUSAC</span>
+      <h2>IA integrada, hecha para tu negocio</h2>
+      <p>No es software genérico. Adaptamos la automatización a cómo trabajas tú.</p>
+    </div>
+    <div class="benefits">
+      <div class="bcard reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3.5"/></svg></div>
+        <h3>IA de verdad</h3>
+        <p>Inteligencia artificial que lee, entiende y ordena la factura como lo haría una persona, en segundos.</p>
+      </div>
+      <div class="bcard reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Z"/></svg></div>
+        <h3>Todo por WhatsApp</h3>
+        <p>Sin apps nuevas ni cursos. Usas la herramienta que ya tienes en el bolsillo.</p>
+      </div>
+      <div class="bcard reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Personalizado</h3>
+        <p>Adaptamos el sistema a tu rubro: taller, ferretería, tienda, estudio contable o servicios.</p>
+      </div>
+      <div class="bcard reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>Seguro y respaldado</h3>
+        <p>Número dedicado (chip aparte) y copia de seguridad diaria en Google Drive. Tus datos, protegidos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEPS -->
+<section class="block steps" id="como">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Cómo funciona</span>
+      <h2>Envías · Lee · Ordena</h2>
+      <p>Nosotros lo instalamos y lo dejamos funcionando 24/7. Tú solo mandas la foto.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step reveal">
+        <div class="num">01</div>
+        <h3>Envías</h3>
+        <p>Le mandas por WhatsApp la foto o el PDF de tu factura de compra. Desde el celular, en cualquier momento.</p>
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="step reveal">
+        <div class="num">02</div>
+        <h3>Lee</h3>
+        <p>La IA extrae proveedor, RUC, serie-número, base imponible, IGV y total automáticamente.</p>
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="step reveal">
+        <div class="num">03</div>
+        <h3>Ordena</h3>
+        <p>Lo guarda en tu Excel y te confirma los datos al instante. Tu crédito fiscal del mes, siempre al día.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLAGSHIP: BOT DE FACTURAS -->
+<section class="block flag" id="producto">
+  <div class="wrap">
+    <div class="flag-media reveal">
+      <div class="excel">
+        <div class="er head"><div>Proveedor</div><div>RUC</div><div>Base</div><div>IGV</div><div>Total</div></div>
+        <div class="er"><div>Repuestos Andinos</div><div>2051…</div><div>254.24</div><div>45.76</div><div class="amt">300.00</div></div>
+        <div class="er"><div>Llantas del Sur</div><div>2044…</div><div>508.47</div><div>91.53</div><div class="amt">600.00</div></div>
+        <div class="er"><div>Lubricantes JR</div><div>1072…</div><div>127.12</div><div>22.88</div><div class="amt">150.00</div></div>
+        <div class="er"><div>Ferretería Mundo</div><div>2060…</div><div>211.86</div><div>38.14</div><div class="amt">250.00</div></div>
+        <div class="er head"><div>Total mes</div><div></div><div>1,101.69</div><div>198.31</div><div class="amt">1,300.00</div></div>
+      </div>
+      <div class="excel-cap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+        facturas.xlsx · base, IGV y total ya separados · crédito fiscal listo para revisar
+      </div>
+    </div>
+    <div class="flag-copy reveal">
+      <span class="tag">⭐ Nuestro producto estrella</span>
+      <h2>Bot de Facturas por WhatsApp</h2>
+      <p style="color:var(--muted);margin-bottom:6px">Manda la foto o el PDF de tus facturas de compra y el bot las lee y ordena solo en un Excel — con base imponible, IGV y total ya separados. Sin copiar nada a mano.</p>
+      <ul class="feat">
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></span><div><b>Lee fotos y PDF automáticamente</b><span>Extrae proveedor, RUC, serie-número, base, IGV y total.</span></div></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></span><div><b>No repite facturas (RUC + serie)</b><span>Detecta la misma factura y no la duplica en tu Excel.</span></div></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></span><div><b>Resumen del crédito fiscal del periodo</b><span>Suma solo tu crédito del mes, listo para tu declaración.</span></div></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></span><div><b>Respaldo diario en Google Drive</b><span>Copia de seguridad automática todos los días. Nunca pierdes tus datos.</span></div></li>
+      </ul>
+      <a href="#planes" class="btn btn-brand">Ver planes del bot
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Más soluciones</span>
+      <h2>Automatización para cada negocio</h2>
+      <p>El bot de facturas es solo el comienzo. Diseñamos el asistente con IA que tu negocio necesita.</p>
+    </div>
+    <div class="cases-grid">
+      <div class="case reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 4h16v4H4zM4 12h16v8H4z"/><path d="M8 12v8M16 12v8"/></svg></div>
+        <h3>Talleres y ferreterías</h3>
+        <p>Facturas de compra, control de repuestos y crédito fiscal ordenado sin papeleo.</p>
+      </div>
+      <div class="case reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 9h18l-1 11H4L3 9ZM8 9V6a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Tiendas y bodegas</h3>
+        <p>Toma de pedidos por WhatsApp, catálogo automático y registro de ventas al instante.</p>
+      </div>
+      <div class="case reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 17V7l6 5-6 5ZM4 4h16v16H4z"/></svg></div>
+        <h3>Contadores y estudios</h3>
+        <p>Varios negocios y RUC en un solo lugar, facturas ilimitadas y reportes por periodo.</p>
+      </div>
+      <div class="case reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></div>
+        <h3>Atención al cliente</h3>
+        <p>Un asistente que responde las preguntas frecuentes de tus clientes al instante, 24/7.</p>
+      </div>
+      <div class="case reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+        <h3>Reportes automáticos</h3>
+        <p>Resúmenes de ventas, gastos o inventario generados solos y enviados a tu WhatsApp.</p>
+      </div>
+      <div class="case reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2 2 7l10 5 10-5-10-5ZM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>A tu medida</h3>
+        <p>¿Tienes otra tarea repetitiva? La analizamos y construimos un sistema con IA para ti.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="block pricing" id="planes">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Planes</span>
+      <h2>Precios claros, sin sorpresas</h2>
+      <p>Instalación y puesta en marcha incluidas. El plan cubre todo tu uso según el límite mensual, sin cobros por factura.</p>
+    </div>
+    <div class="plans">
+      <div class="plan reveal">
+        <h3>📄 Básico</h3>
+        <p class="sub">Ideal para el negocio pequeño que empieza a ordenarse.</p>
+        <div class="amt"><span class="cur">S/</span><span class="val">59</span><span class="per">/mes</span></div>
+        <div class="lim">Hasta 100 facturas / mes</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Lee fotos y PDF automáticamente</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Excel con base, IGV y total separados</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Resumen del crédito fiscal del periodo</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> No repite facturas (RUC + serie)</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Respaldo diario en Google Drive</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Soporte por WhatsApp</li>
+        </ul>
+        <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20me%20interesa%20el%20plan%20B%C3%A1sico%20(S%2F59)" class="btn btn-ghost">Empezar con Básico</a>
+      </div>
+
+      <div class="plan pop reveal">
+        <span class="ptag">⭐ El más elegido</span>
+        <h3>🔧 Taller</h3>
+        <p class="sub">Para el taller o ferretería con buen movimiento de facturas.</p>
+        <div class="amt"><span class="cur">S/</span><span class="val">99</span><span class="per">/mes</span></div>
+        <div class="lim">Hasta 300 facturas / mes</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Todo lo del plan Básico</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Mayor volumen mensual</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Resumen mensual automático</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Prioridad en el soporte</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Ideal para talleres y ferreterías</li>
+        </ul>
+        <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20me%20interesa%20el%20plan%20Taller%20(S%2F99)" class="btn btn-wa">Empezar con Taller</a>
+      </div>
+
+      <div class="plan reveal">
+        <h3>📊 Contador</h3>
+        <p class="sub">Para quien maneja varios negocios y RUC a la vez.</p>
+        <div class="amt"><span class="cur">S/</span><span class="val">159</span><span class="per">/mes</span></div>
+        <div class="lim">Facturas ilimitadas (uso justo)</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Todo lo del plan Taller</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Varios negocios / RUC</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Reportes por periodo</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Soporte prioritario</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Ideal para contadores y estudios</li>
+        </ul>
+        <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20me%20interesa%20el%20plan%20Contador%20(S%2F159)" class="btn btn-ghost">Empezar con Contador</a>
+      </div>
+    </div>
+
+    <div class="custom reveal">
+      <div class="cx">
+        <h3>¿Necesitas otra automatización?</h3>
+        <p>Si tu negocio tiene una tarea repetitiva distinta, diseñamos un sistema con IA a tu medida. Cuéntanos qué necesitas y te pasamos una cotización sin compromiso.</p>
+      </div>
+      <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20quiero%20una%20automatizaci%C3%B3n%20a%20medida%20para%20mi%20negocio" class="btn btn-brand">Pedir sistema a medida
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <p class="price-foot">Precios en soles (S/). Instalación y puesta en marcha incluidas. Pago por Yape / Plin o transferencia.</p>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Lo que dicen</span>
+      <h2>Negocios que ya ahorran horas</h2>
+      <p>Talleres, ferreterías y contadores que dejaron de copiar facturas a mano.</p>
+    </div>
+    <div class="rgrid">
+      <div class="rcard reveal">
+        <div class="stars">★★★★★</div>
+        <p>"Antes pasaba las tardes copiando facturas al Excel. Ahora solo mando la foto y el bot lo hace en segundos. Me devolvió mis horas."</p>
+        <div class="who"><span class="av">J</span><div><b>Jorge M.</b><span>Taller mecánico · Lima</span></div></div>
+      </div>
+      <div class="rcard reveal">
+        <div class="stars">★★★★★</div>
+        <p>"Llevo varios RUC de clientes. El plan Contador me ordena todo el crédito fiscal del mes y ya no se me pierden facturas. Vale cada sol."</p>
+        <div class="who"><span class="av">R</span><div><b>Rosa V.</b><span>Contadora independiente</span></div></div>
+      </div>
+      <div class="rcard reveal">
+        <div class="stars">★★★★★</div>
+        <p>"Lo probé 7 días gratis y no lo solté. Es como tener un asistente que nunca se cansa y trabaja desde mi WhatsApp. Muy recomendado."</p>
+        <div class="who"><span class="av">M</span><div><b>Manuel C.</b><span>Repuestos y lubricantes</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="block steps" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2>Antes de empezar</h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q">¿Necesito estar en la computadora? <span class="pm">+</span></button>
+        <div class="faq-a"><p>No. Tú solo mandas las fotos por WhatsApp desde el celular. El bot trabaja solo en segundo plano, 24/7.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">¿Es seguro? ¿Me pueden bloquear el WhatsApp? <span class="pm">+</span></button>
+        <div class="faq-a"><p>Para evitar cualquier riesgo, el bot usa un número de WhatsApp dedicado (un chip aparte, no tu número personal). Así tu WhatsApp de siempre queda intacto.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">¿Reemplaza a mi contador o a la SUNAT? <span class="pm">+</span></button>
+        <div class="faq-a"><p>No. Es una ayuda para tener todo ordenado y no perder crédito fiscal. Tu declaración sigue saliendo del SIRE / RCE en SUNAT. Siempre conviene revisar los montos antes de declarar; el bot te los deja listos para revisar.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">¿Y si la foto sale movida o es un PDF? <span class="pm">+</span></button>
+        <div class="faq-a"><p>Lee fotos y PDF. Si una sale muy borrosa, te avisa para que la mandes de nuevo. Igual siempre puedes revisar el Excel.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">¿Cuánto cuesta cada factura? <span class="pm">+</span></button>
+        <div class="faq-a"><p>Nada extra. El plan ya cubre todo el uso según tu límite mensual. Sin sorpresas ni cobros por factura.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">¿Y si mando la misma factura dos veces? <span class="pm">+</span></button>
+        <div class="faq-a"><p>No se duplica. El bot detecta que ya la tenía (por RUC + serie) y la ignora.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">¿Puedo automatizar otra cosa que no sean facturas? <span class="pm">+</span></button>
+        <div class="faq-a"><p>Sí. El bot de facturas es nuestro producto estrella, pero construimos sistemas con IA a la medida para pedidos, atención al cliente, reportes y más. Escríbenos y lo vemos.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final" id="contacto-wa">
+  <div class="glow gf"></div>
+  <div class="wrap reveal">
+    <h2>Pruébalo <em>gratis 7 días</em></h2>
+    <p>Sin compromiso: mándanos tus facturas por WhatsApp y ve el Excel armarse solo. Si te sirve, seguimos. Instalación incluida.</p>
+    <div class="hero-cta">
+      <a href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20quiero%20activar%20la%20prueba%20gratis%20de%207%20d%C3%ADas%20del%20bot%20de%20facturas" class="btn btn-wa">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.52 12.99c-.21.58-1.22 1.11-1.68 1.18-.41.06-.94.08-1.51-.1-.35-.11-.8-.26-1.37-.51-2.41-1.04-3.98-3.45-4.1-3.62-.12-.16-.98-1.3-.98-2.47s.62-1.75.84-2c.22-.25.48-.31.64-.31h.48c.16.01.36-.05.56.43.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.08.16-.12.26-.25.41-.12.14-.26.32-.37.43-.12.13-.25.26-.11.51.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.13.4.11.54-.06.15-.16.63-.72.79-.97.17-.25.33-.21.56-.13.22.09 1.44.69 1.69.81.25.12.41.18.47.29.07.11.07.6-.14 1.18Z"/></svg>
+        Escríbenos por WhatsApp
+      </a>
+      <a href="#planes" class="btn btn-ghost">Ver los planes</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <div class="logo">
+          <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg></span>
+          HUSA<b>C</b>
+        </div>
+        <p>Automatización de sistemas personalizados con inteligencia artificial integrada. Menos trabajo repetitivo, más tiempo para tu negocio.</p>
+        <div class="biz">
+          <b>HUSA PARTS E.I.R.L.</b> · RUC 10754441602<br>
+          Av. Iquitos 290, 2do piso — La Victoria, Lima<br>
+          WhatsApp: <b>932 203 366</b>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Producto</h4>
+        <a href="#producto">Bot de facturas</a>
+        <a href="#soluciones">Soluciones</a>
+        <a href="#como">Cómo funciona</a>
+        <a href="#planes">Planes y precios</a>
+      </div>
+      <div class="foot-col">
+        <h4>Contacto</h4>
+        <a href="https://wa.me/51932203366?text=Hola%20HUSAC">Escríbenos por WhatsApp</a>
+        <a href="#faq">Preguntas frecuentes</a>
+        <a href="#contacto-wa">Prueba gratis 7 días</a>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 HUSAC · HUSA PARTS E.I.R.L. Todos los derechos reservados.</span>
+      <span>Automatización con IA · para negocios reales</span>
+    </div>
+  </div>
+  <p class="disc">Aviso: el bot es una ayuda para ordenar tu crédito fiscal; no reemplaza tu declaración ante SUNAT (SIRE / RCE). La lectura de la IA es muy buena pero no perfecta: revisa siempre los montos antes de declarar. Los límites y precios mostrados son referenciales y pueden ajustarse.</p>
+</footer>
+
+<a class="wa-fab" href="https://wa.me/51932203366?text=Hola%20HUSAC%2C%20quiero%20informaci%C3%B3n%20del%20bot%20de%20facturas" aria-label="Escríbenos por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.52 12.99c-.21.58-1.22 1.11-1.68 1.18-.41.06-.94.08-1.51-.1-.35-.11-.8-.26-1.37-.51-2.41-1.04-3.98-3.45-4.1-3.62-.12-.16-.98-1.3-.98-2.47s.62-1.75.84-2c.22-.25.48-.31.64-.31h.48c.16.01.36-.05.56.43.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.08.16-.12.26-.25.41-.12.14-.26.32-.37.43-.12.13-.25.26-.11.51.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.13.4.11.54-.06.15-.16.63-.72.79-.97.17-.25.33-.21.56-.13.22.09 1.44.69 1.69.81.25.12.41.18.47.29.07.11.07.6-.14 1.18Z"/></svg>
+</a>
+
+<script>
+  // reveal on scroll
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{
+    el.style.transitionDelay = (i%4)*0.06 + 's';
+    io.observe(el);
+  });
+
+  // faq accordion
+  document.querySelectorAll('.faq-q').forEach(q=>{
+    q.addEventListener('click',()=>{
+      const item = q.parentElement;
+      const a = item.querySelector('.faq-a');
+      const open = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(o=>{
+        o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight=null;
+      });
+      if(!open){ item.classList.add('open'); a.style.maxHeight = a.scrollHeight+'px'; }
+    });
+  });
+
+  // mobile menu -> scroll to planes
+  const burger = document.querySelector('.burger');
+  if(burger){ burger.addEventListener('click',()=>{ document.querySelector('#planes').scrollIntoView({behavior:'smooth'}); }); }
+</script>
+</body>
+</html>
